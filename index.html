@@ -263,6 +263,15 @@
     opacity: 0.5;
   }
 
+  .service-arrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.8rem; font-weight: 600;
+    color: var(--green);
+    margin-top: 16px;
+    transition: gap 0.2s;
+  }
+  .service-card:hover .service-arrow { gap: 10px; }
+
   /* ── SERVICES ── */
   .services {
     padding: 96px 5%;
@@ -316,9 +325,12 @@
     padding: 32px 28px;
     border: 1px solid var(--mist);
     transition: all 0.25s;
-    cursor: default;
+    cursor: pointer;
     position: relative;
     overflow: hidden;
+    text-decoration: none;
+    display: block;
+    color: inherit;
   }
   .service-card::after {
     content: '';
@@ -640,36 +652,42 @@
     <a href="#contact" class="section-link">ดูทั้งหมด →</a>
   </div>
   <div class="services-grid">
-    <div class="service-card">
+    <a href="service-accounting.html" class="service-card">
       <div class="service-icon">📊</div>
       <div class="service-name">จัดทำบัญชีรายเดือน</div>
       <div class="service-desc">บันทึกรายการรับ-จ่าย ปิดงบรายเดือน จัดทำสมุดรายวัน สมุดแยกประเภท และรายงานทางการเงินที่ถูกต้องครบถ้วน</div>
-    </div>
-    <div class="service-card">
+      <div class="service-arrow">ดูรายละเอียด →</div>
+    </a>
+    <a href="service-tax.html" class="service-card">
       <div class="service-icon">📑</div>
       <div class="service-name">ยื่นภาษีสรรพากร</div>
       <div class="service-desc">วางแผนและยื่นแบบภาษีเงินได้นิติบุคคล ภาษีมูลค่าเพิ่ม ภาษีหัก ณ ที่จ่าย และภาษีบุคคลธรรมดาอย่างถูกต้อง</div>
-    </div>
-    <div class="service-card">
+      <div class="service-arrow">ดูรายละเอียด →</div>
+    </a>
+    <a href="service-register.html" class="service-card">
       <div class="service-icon">🏢</div>
       <div class="service-name">จดทะเบียนบริษัท</div>
       <div class="service-desc">จดทะเบียนจัดตั้งบริษัท ห้างหุ้นส่วน ร้านค้า รวมถึงการขอเลขประจำตัวผู้เสียภาษีและจดทะเบียนภาษีมูลค่าเพิ่ม</div>
-    </div>
-    <div class="service-card">
+      <div class="service-arrow">ดูรายละเอียด →</div>
+    </a>
+    <a href="service-audit.html" class="service-card">
       <div class="service-icon">🔍</div>
       <div class="service-name">ตรวจสอบบัญชี</div>
       <div class="service-desc">ตรวจสอบความถูกต้องของงบการเงิน ออกรายงานผู้สอบบัญชีรับอนุญาต รับรองงบโดยผู้ตรวจสอบมืออาชีพ</div>
-    </div>
-    <div class="service-card">
+      <div class="service-arrow">ดูรายละเอียด →</div>
+    </a>
+    <a href="service-taxplan.html" class="service-card">
       <div class="service-icon">💰</div>
       <div class="service-name">วางแผนภาษี</div>
       <div class="service-desc">วิเคราะห์โครงสร้างธุรกิจและวางแผนภาษีอย่างถูกกฎหมาย เพื่อลดภาระภาษีและเพิ่มประสิทธิภาพทางการเงิน</div>
-    </div>
-    <div class="service-card">
+      <div class="service-arrow">ดูรายละเอียด →</div>
+    </a>
+    <a href="service-payroll.html" class="service-card">
       <div class="service-icon">👥</div>
       <div class="service-name">ระบบเงินเดือน</div>
       <div class="service-desc">จัดทำสลิปเงินเดือน คำนวณภาษี หัก ณ ที่จ่าย ประกันสังคม และยื่นแบบ ภ.ง.ด.1 ทุกเดือนอย่างครบถ้วน</div>
-    </div>
+      <div class="service-arrow">ดูรายละเอียด →</div>
+    </a>
   </div>
 </section>
 

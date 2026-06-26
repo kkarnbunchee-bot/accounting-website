@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตรวจสอบบัญชี — สำนักงาน ก. การบัญชี</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --forest: #1A3C34; --green: #2E7D5E; --green-lt: #4BA882;
+    --gold: #C9A84C; --gold-lt: #E8C96A; --snow: #F8FAFC;
+    --mist: #E8EEF2; --ink: #1C2B26; --stone: #6B8070; --white: #FFFFFF;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; background: var(--snow); color: var(--ink); line-height: 1.6; }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(248,250,252,0.95); backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(26,60,52,0.08);
+    padding: 0 5%; display: flex; align-items: center; justify-content: space-between; height: 68px;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav-logo-mark {
+    width: 36px; height: 36px; background: var(--forest); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-logo-mark svg { width: 20px; height: 20px; fill: var(--gold); }
+  .nav-logo-text { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--forest); }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a { text-decoration: none; font-size: 0.875rem; font-weight: 500; color: var(--stone); transition: color 0.2s; }
+  .nav-links a:hover { color: var(--forest); }
+  .nav-cta {
+    background: var(--forest); color: var(--white) !important;
+    padding: 10px 22px; border-radius: 6px; font-size: 0.875rem !important; font-weight: 500 !important;
+  }
+  .nav-back {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.875rem; font-weight: 500; color: var(--stone);
+    text-decoration: none; transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--forest); }
+
+  .page-hero {
+    padding: 120px 5% 72px;
+    background: linear-gradient(160deg, #F8FAFC 55%, #EDF4F0 100%);
+    border-bottom: 1px solid var(--mist);
+  }
+  .breadcrumb {
+    font-size: 0.8rem; color: var(--stone); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .breadcrumb a { color: var(--green); text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .page-hero-inner { max-width: 720px; }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--green); margin-bottom: 16px;
+  }
+  .hero-eyebrow::before { content: ''; display: block; width: 28px; height: 2px; background: var(--gold); }
+  .page-hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3rem); font-weight: 700;
+    color: var(--forest); margin-bottom: 16px; letter-spacing: -0.02em;
+  }
+  .page-hero-icon { font-size: 2.5rem; margin-bottom: 16px; }
+  .page-hero p { font-size: 1.05rem; color: var(--stone); max-width: 560px; line-height: 1.75; margin-bottom: 32px; }
+  .btn-primary {
+    background: var(--forest); color: var(--white); padding: 14px 30px;
+    border-radius: 8px; font-size: 0.95rem; font-weight: 600;
+    text-decoration: none; display: inline-block; transition: background 0.22s;
+  }
+  .btn-primary:hover { background: var(--green); }
+
+  .content { padding: 80px 5%; }
+  .content-grid { display: grid; grid-template-columns: 1fr 320px; gap: 56px; max-width: 1100px; margin: 0 auto; }
+
+  .details-title {
+    font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700;
+    color: var(--forest); margin-bottom: 32px;
+  }
+  .detail-list { display: flex; flex-direction: column; gap: 20px; }
+  .detail-item {
+    background: var(--white); border-radius: 12px; padding: 24px 26px;
+    border: 1px solid var(--mist); display: flex; gap: 16px; align-items: flex-start;
+    transition: box-shadow 0.2s;
+  }
+  .detail-item:hover { box-shadow: 0 4px 24px rgba(26,60,52,0.08); }
+  .detail-num {
+    width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px;
+    background: var(--forest); color: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; font-weight: 700; margin-top: 2px;
+  }
+  .detail-name { font-size: 0.95rem; font-weight: 600; color: var(--forest); margin-bottom: 6px; }
+  .detail-desc { font-size: 0.875rem; color: var(--stone); line-height: 1.65; }
+
+  .sidebar { display: flex; flex-direction: column; gap: 20px; }
+  .sidebar-card {
+    background: var(--white); border-radius: 14px; padding: 28px;
+    border: 1px solid var(--mist); box-shadow: 0 2px 16px rgba(26,60,52,0.06);
+  }
+  .sidebar-card h3 { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--forest); margin-bottom: 16px; }
+  .price-tag { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: var(--green); margin-bottom: 6px; }
+  .price-note { font-size: 0.8rem; color: var(--stone); }
+  .suitable-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .suitable-list li { display: flex; gap: 10px; align-items: flex-start; font-size: 0.875rem; color: var(--stone); line-height: 1.5; }
+  .suitable-list li::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .cta-card { background: var(--forest); border-radius: 14px; padding: 28px; text-align: center; }
+  .cta-card h3 { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 10px; }
+  .cta-card p { font-size: 0.825rem; color: rgba(255,255,255,0.6); margin-bottom: 20px; line-height: 1.6; }
+  .btn-gold {
+    background: var(--gold); color: var(--forest); padding: 12px 24px;
+    border-radius: 8px; font-size: 0.9rem; font-weight: 700;
+    text-decoration: none; display: inline-block; transition: background 0.2s;
+  }
+  .btn-gold:hover { background: var(--gold-lt); }
+
+  footer { background: #0F2420; padding: 40px 5% 28px; color: rgba(255,255,255,0.45); }
+  .footer-bottom { display: flex; justify-content: space-between; font-size: 0.78rem; }
+  .footer-bottom a { color: var(--gold); text-decoration: none; }
+
+  @media (max-width: 900px) {
+    .content-grid { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-mark">
+      <svg viewBox="0 0 20 20"><path d="M3 5h14v1H3zM3 9h14v1H3zM3 13h8v1H3z"/><circle cx="15.5" cy="13.5" r="2.5"/></svg>
+    </div>
+    <span class="nav-logo-text">สำนักงาน ก. การบัญชี</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html#services">บริการ</a></li>
+    <li><a href="index.html#why">เกี่ยวกับเรา</a></li>
+    <li><a href="index.html#testimonials">รีวิว</a></li>
+    <li><a href="index.html#contact" class="nav-cta">นัดหมาย</a></li>
+  </ul>
+</nav>
+
+<section class="page-hero">
+  <div class="page-hero-inner">
+    <div class="breadcrumb">
+      <a href="index.html">หน้าหลัก</a> › <span>บริการ</span> › <span>ตรวจสอบบัญชี</span>
+    </div>
+    <div class="hero-eyebrow">Audit Services</div>
+    <div class="page-hero-icon">🔍</div>
+    <h1>ตรวจสอบบัญชี</h1>
+    <p>บริการตรวจสอบบัญชีโดยผู้สอบบัญชีรับอนุญาต (CPA) ที่ได้รับการรับรองจากสภาวิชาชีพบัญชี มั่นใจได้ว่างบการเงินของคุณถูกต้องและเชื่อถือได้</p>
+    <a href="index.html#contact" class="btn-primary">ปรึกษาฟรี ไม่มีค่าใช้จ่าย</a>
+  </div>
+</section>
+
+<section class="content">
+  <div class="content-grid">
+    <div>
+      <h2 class="details-title">สิ่งที่คุณจะได้รับ</h2>
+      <div class="detail-list">
+        <div class="detail-item">
+          <div class="detail-num">01</div>
+          <div>
+            <div class="detail-name">ตรวจสอบงบการเงินประจำปี</div>
+            <div class="detail-desc">ตรวจสอบและรับรองงบการเงินประจำปีตามมาตรฐานการสอบบัญชี</div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-num">02</div>
+          <div>
+            <div class="detail-name">รายงานผู้สอบบัญชีรับอนุญาต</div>
+            <div class="detail-desc">ออกรายงานลงนามโดย CPA ที่ได้รับอนุญาตจากสภาวิชาชีพบัญชี</div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-num">03</div>
+          <div>
+            <div class="detail-name">ตรวจสอบระบบควบคุมภายใน</div>
+            <div class="detail-desc">ประเมินและให้คำแนะนำด้านระบบควบคุมภายในของกิจการ</div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-num">04</div>
+          <div>
+            <div class="detail-name">ตรวจสอบพิเศษ</div>
+            <div class="detail-desc">ตรวจสอบเฉพาะกิจตามที่ผู้บริหารหรือผู้ถือหุ้นต้องการ</div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-num">05</div>
+          <div>
+            <div class="detail-name">Due Diligence</div>
+            <div class="detail-desc">ตรวจสอบบัญชีเพื่อการซื้อขายกิจการ การลงทุน หรือการระดมทุน</div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-num">06</div>
+          <div>
+            <div class="detail-name">ให้คำแนะนำหลังตรวจสอบ</div>
+            <div class="detail-desc">สรุปข้อบกพร่องที่พบและให้คำแนะนำในการปรับปรุง</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="sidebar-card">
+        <h3>ค่าบริการ</h3>
+        <div class="price-tag">เริ่มต้น 8,000 บาท/ปี</div>
+        <div class="price-note">*ราคาอาจแตกต่างตามขนาดธุรกิจ ติดต่อเพื่อรับใบเสนอราคาที่แม่นยำ</div>
+      </div>
+      <div class="sidebar-card">
+        <h3>เหมาะสำหรับ</h3>
+        <ul class="suitable-list">
+          <li>บริษัทจำกัดที่ต้องยื่นงบรายปี</li>
+          <li>กิจการที่ต้องการความน่าเชื่อถือ</li>
+          <li>ธุรกิจที่ต้องการขอสินเชื่อ</li>
+
+        </ul>
+      </div>
+      <div class="cta-card">
+        <h3>พร้อมเริ่มต้นแล้วหรือยัง?</h3>
+        <p>ปรึกษาผู้เชี่ยวชาญของเราฟรี ไม่มีค่าใช้จ่าย ไม่มีข้อผูกมัด</p>
+        <a href="tel:0819546429" class="btn-gold">โทร 081-954-6429</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-bottom">
+    <span>© 2562 สำนักงาน ก. การบัญชี</span>
+    <a href="index.html">← กลับหน้าหลัก</a>
+  </div>
+</footer>
+
+</body>
+</html>
