@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accounting Report Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--forest:#1A3C34;--green:#2E7D5E;--gold:#C9A84C;--snow:#F8FAFC;--mist:#E8EEF2;--ink:#1C2B26;--stone:#6B8070;--white:#fff;--warn:#FDECEA;--warn-ink:#A12D22;--ok:#E6F4EC;--line:#D5DEE3}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans Thai',system-ui,sans-serif;background:var(--snow);color:var(--ink);font-size:15px;line-height:1.55}
+header{background:var(--forest);color:var(--white);padding:18px 16px}
+header .wrap{max-width:1200px;margin:0 auto;display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+header h1{font-size:1.25rem;font-weight:600}
+header small{color:#cfe0d8}
+header input{background:#ffffff1a;border:1px solid #ffffff40;color:#fff;border-radius:6px;padding:6px 10px;font:inherit;min-width:260px}
+nav{background:var(--white);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav .wrap{max-width:1200px;margin:0 auto;display:flex;overflow-x:auto}
+nav button{border:0;background:none;padding:14px 16px;font:inherit;color:var(--stone);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+nav button.active{color:var(--forest);border-color:var(--gold);font-weight:600}
+main{max-width:1200px;margin:0 auto;padding:20px 16px 60px}
+section{display:none}section.active{display:block}
+h2{font-size:1.2rem;color:var(--forest);margin-bottom:4px}
+.sub{color:var(--stone);margin-bottom:16px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 16px}
+.toolbar label{display:flex;gap:6px;align-items:center;font-size:.9rem;color:var(--stone)}
+input[type=date],input[type=month],input[type=number],input[type=text]{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:#fff}
+.btn{font:inherit;border:1px solid var(--forest);background:var(--forest);color:#fff;border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.ghost{background:#fff;color:var(--forest)}
+.btn:hover{opacity:.9}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi b{display:block;font-size:1.25rem;color:var(--forest);font-variant-numeric:tabular-nums}
+.kpi span{font-size:.85rem;color:var(--stone)}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--mist);font-weight:600;font-size:.88rem;white-space:nowrap}
+td.n,th.n{text-align:right;white-space:nowrap}
+tr.total td{font-weight:700;background:var(--mist)}
+tr.grp td{font-weight:600;background:#f3f6f8;color:var(--forest)}
+tr.bad td{background:var(--warn)}
+td.i1{padding-left:24px}td.i2{padding-left:40px}
+.tag{display:inline-block;font-size:.78rem;padding:1px 8px;border-radius:999px;background:var(--ok);color:var(--green)}
+.tag.bad{background:var(--warn);color:var(--warn-ink)}
+.flags{font-size:.85rem;color:var(--warn-ink)}
+.flags.soft{color:var(--stone)}
+.checks li{list-style:none;padding:4px 0}
+.bar{display:flex;height:22px;border-radius:6px;overflow:hidden;margin:6px 0 4px}
+.bar div{height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:.8rem;color:var(--stone)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
+details{margin-top:8px}
+summary{cursor:pointer;color:var(--green);font-weight:500}
+textarea{width:100%;min-height:140px;font-family:ui-monospace,monospace;font-size:.8rem;border:1px solid var(--line);border-radius:6px;padding:8px;margin-top:8px}
+.note{font-size:.85rem;color:var(--stone);margin-top:8px}
+.edit input{width:130px;text-align:right}
+@media print{nav,.toolbar,details,header input{display:none!important}section{display:none!important}section.active{display:block!important}body{background:#fff}.card{border:0;padding:0}}
+@media (max-width:640px){header input{min-width:0;width:100%}th,td{padding:6px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div><h1>เครื่องมือรายงานฝ่ายบัญชี</h1><small>งบกระแสเงินสด · อายุลูกหนี้ · อายุเจ้าหนี้ · ภาษีซื้อ · อัตราส่วนทางการเงิน</small></div>
+  <input id="company" value="บริษัท สยามตัวอย่างการค้า จำกัด" aria-label="ชื่อบริษัท">
+</div></header>
+<nav><div class="wrap">
+  <button data-t="cf" class="active">1. งบกระแสเงินสด</button>
+  <button data-t="ar">2. อายุลูกหนี้</button>
+  <button data-t="ap">3. อายุเจ้าหนี้</button>
+  <button data-t="vat">4. รายงานภาษีซื้อ</button>
+  <button data-t="ratio">5. อัตราส่วนทางการเงิน</button>
+</div></nav>
+<main>
+
+<section id="cf" class="active">
+  <h2>งบกระแสเงินสด (วิธีทางอ้อม)</h2>
+  <p class="sub">ใส่ยอดงบแสดงฐานะการเงิน 2 ปี + งบกำไรขาดทุน + ข้อมูลเพิ่มเติม ระบบคำนวณและกระทบยอดให้อัตโนมัติ</p>
+  <div class="toolbar"><button class="btn" onclick="exportTable('cfTable','cashflow')">ส่งออก CSV</button><button class="btn ghost" onclick="print()">พิมพ์ / PDF</button></div>
+  <div class="kpis" id="cfKpi"></div>
+  <div class="card tbl"><table id="cfTable"></table></div>
+  <div class="card"><b>การตรวจสอบความถูกต้อง</b><ul class="checks" id="cfChecks"></ul></div>
+  <details class="card"><summary>แก้ไขข้อมูลงบการเงิน (ใช้ร่วมกับแท็บอัตราส่วน)</summary>
+    <div class="tbl edit"><table id="fsEdit"></table></div>
+    <p class="note">ค่าเผื่อหนี้สงสัยจะสูญและค่าเสื่อมราคาสะสม ให้ใส่เป็นตัวเลขบวก · หรือวางข้อมูล CSV (รูปแบบเดียวกับ financial_statements.csv)</p>
+    <textarea id="fsCsv"></textarea><button class="btn ghost" onclick="loadCsv('fs')">โหลด CSV</button>
+  </details>
+</section>
+
+<section id="ar">
+  <h2>รายงานวิเคราะห์อายุลูกหนี้</h2>
+  <p class="sub">นับอายุจากวันครบกำหนดชำระ · ไฮไลต์รายการเกิน 90 วัน · คำนวณค่าเผื่อหนี้สงสัยจะสูญตามอัตรานโยบาย</p>
+  <div class="toolbar">
+    <label>ณ วันที่ <input type="date" id="arAsOf" value="2026-10-31"></label>
+    <label>ยอดตาม GL <input type="number" id="arGl" value="2053500" step="0.01"></label>
+    <button class="btn" onclick="exportTable('arSum','ar-aging')">ส่งออก CSV</button><button class="btn ghost" onclick="print()">พิมพ์ / PDF</button>
+  </div>
+  <div class="kpis" id="arKpi"></div>
+  <div class="card"><b>สัดส่วนตามช่วงอายุ</b><div class="bar" id="arBar"></div><div class="legend" id="arLeg"></div></div>
+  <div class="card tbl"><table id="arSum"></table></div>
+  <div class="card tbl"><b>รายละเอียดเอกสารค้างชำระ</b><table id="arDet"></table></div>
+  <div class="card" id="arIssues"></div>
+  <details class="card"><summary>นำเข้าข้อมูลลูกหนี้ (CSV)</summary><textarea id="arCsv"></textarea><button class="btn ghost" onclick="loadCsv('ar')">โหลด CSV</button></details>
+</section>
+
+<section id="ap">
+  <h2>รายงานวิเคราะห์อายุเจ้าหนี้</h2>
+  <p class="sub">นับอายุจากวันครบกำหนดชำระ · พร้อมประมาณการเงินสดที่ต้องจ่ายเพื่อวางแผนสภาพคล่อง</p>
+  <div class="toolbar">
+    <label>ณ วันที่ <input type="date" id="apAsOf" value="2026-10-31"></label>
+    <label>ยอดตาม GL <input type="number" id="apGl" value="523190" step="0.01"></label>
+    <button class="btn" onclick="exportTable('apSum','ap-aging')">ส่งออก CSV</button><button class="btn ghost" onclick="print()">พิมพ์ / PDF</button>
+  </div>
+  <div class="kpis" id="apKpi"></div>
+  <div class="card"><b>สัดส่วนตามช่วงอายุ</b><div class="bar" id="apBar"></div><div class="legend" id="apLeg"></div></div>
+  <div class="card tbl"><table id="apSum"></table></div>
+  <div class="card tbl"><b>รายละเอียดเอกสารค้างจ่าย</b><table id="apDet"></table></div>
+  <div class="card" id="apIssues"></div>
+  <details class="card"><summary>นำเข้าข้อมูลเจ้าหนี้ (CSV)</summary><textarea id="apCsv"></textarea><button class="btn ghost" onclick="loadCsv('ap')">โหลด CSV</button></details>
+</section>
+
+<section id="vat">
+  <h2>รายงานภาษีซื้อ</h2>
+  <p class="sub">ตรวจเลขผู้เสียภาษี · VAT 7% · ใบกำกับซ้ำ · อายุเกิน 6 เดือน · ภาษีซื้อต้องห้าม แล้วจัดรูปแบบตามรายงานภาษีซื้อ</p>
+  <div class="toolbar">
+    <label>เดือนภาษี <input type="month" id="vatMonth" value="2026-10"></label>
+    <label>เลขผู้เสียภาษีบริษัท <input type="text" id="vatTid" value="0999900001135" maxlength="13"></label>
+    <label>อัตรา VAT % <input type="number" id="vatRate" value="7" step="0.01" style="width:70px"></label>
+    <button class="btn" onclick="exportTable('vatTable','purchase-vat')">ส่งออก CSV</button><button class="btn ghost" onclick="print()">พิมพ์ / PDF</button>
+  </div>
+  <div class="kpis" id="vatKpi"></div>
+  <div class="card tbl"><b id="vatTitle"></b><table id="vatTable"></table></div>
+  <div class="card tbl"><b>ผลตรวจสอบรายการที่ถูกตัดออก / ต้องติดตาม</b><table id="vatChk"></table></div>
+  <details class="card"><summary>นำเข้าใบกำกับภาษีซื้อ (CSV)</summary><textarea id="vatCsv"></textarea><button class="btn ghost" onclick="loadCsv('vat')">โหลด CSV</button></details>
+</section>
+
+<section id="ratio">
+  <h2>รายงานอัตราส่วนทางการเงิน</h2>
+  <p class="sub">คำนวณจากข้อมูลงบการเงินชุดเดียวกับงบกระแสเงินสด (แก้ไขได้ที่แท็บ 1)</p>
+  <div class="toolbar">
+    <label><input type="checkbox" id="ratioAvg"> ใช้ยอดเฉลี่ยต้นปี-ปลายปี (เฉพาะปีล่าสุด)</label>
+    <button class="btn" onclick="exportTable('ratioTable','ratios')">ส่งออก CSV</button><button class="btn ghost" onclick="print()">พิมพ์ / PDF</button>
+  </div>
+  <div class="kpis" id="ratioKpi"></div>
+  <div class="card tbl"><table id="ratioTable"></table></div>
+  <p class="note">เกณฑ์ในคอลัมน์ "ข้อสังเกต" เป็นแนวทางทั่วไปเท่านั้น ควรเทียบกับค่าเฉลี่ยอุตสาหกรรมและแนวโน้มของกิจการเอง</p>
+</section>
+</main>
+
+<script>
+const SAMPLE = {
+fs: `code,section,item,y2024,y2025
+BS_CASH,BS,เงินสดและรายการเทียบเท่าเงินสด,1200000,1312000
+BS_AR,BS,ลูกหนี้การค้า (ยอดก่อนหักค่าเผื่อ),2400000,2950000
+BS_ALLOW,BS,ค่าเผื่อหนี้สงสัยจะสูญ (ใส่เป็นบวก),100000,150000
+BS_INV,BS,สินค้าคงเหลือ,1800000,2100000
+BS_PREPAID,BS,ค่าใช้จ่ายจ่ายล่วงหน้า,120000,90000
+BS_PPE,BS,ที่ดิน อาคารและอุปกรณ์ - ราคาทุน,6000000,6800000
+BS_ACCDEP,BS,ค่าเสื่อมราคาสะสม (ใส่เป็นบวก),1800000,2350000
+BS_AP,BS,เจ้าหนี้การค้า,1500000,1750000
+BS_ACCRUED,BS,ค่าใช้จ่ายค้างจ่าย,200000,260000
+BS_TAXPAY,BS,ภาษีเงินได้นิติบุคคลค้างจ่าย,150000,180000
+BS_STLOAN,BS,เงินกู้ยืมระยะสั้นจากสถาบันการเงิน,500000,300000
+BS_LTLOAN,BS,เงินกู้ยืมระยะยาว,2000000,1600000
+BS_CAPITAL,BS,ทุนจดทะเบียนที่ชำระแล้ว,3000000,3500000
+BS_RE,BS,กำไรสะสม,2270000,3162000
+PL_REV,PL,รายได้จากการขาย,13000000,15000000
+PL_COGS,PL,ต้นทุนขาย,9230000,10500000
+PL_OTHINC,PL,รายได้อื่น (รวมกำไรจากการขายสินทรัพย์),0,20000
+PL_SGA,PL,ค่าใช้จ่ายในการขายและบริหาร (รวมค่าเสื่อมราคาและหนี้สงสัยจะสูญ),2700000,2900000
+PL_INT,PL,ต้นทุนทางการเงิน (ดอกเบี้ยจ่าย),150000,130000
+PL_TAX,PL,ค่าใช้จ่ายภาษีเงินได้,184000,298000
+SUP_DEP,SUP,ค่าเสื่อมราคาระหว่างปี,550000,600000
+SUP_BADDEBT,SUP,หนี้สงสัยจะสูญระหว่างปี,30000,50000
+SUP_GAIN,SUP,กำไร (ขาดทุน) จากการขายสินทรัพย์,0,20000
+SUP_PPE_BUY,SUP,เงินสดจ่ายซื้อที่ดิน อาคารและอุปกรณ์,,900000
+SUP_PPE_PROCEEDS,SUP,เงินสดรับจากการขายอุปกรณ์,,70000
+SUP_INT_PAID,SUP,ดอกเบี้ยจ่ายที่จ่ายเป็นเงินสด,,130000
+SUP_DIV,SUP,เงินปันผลจ่าย,,300000
+`,
+ar: `customer_code,customer_name,doc_no,doc_date,due_date,amount,paid,salesperson,remark
+C001,บริษัท กรีนมาร์ท ค้าปลีก จำกัด,IV6909-0101,2026-09-15,2026-10-15,214000,0,สมศรี,
+C001,บริษัท กรีนมาร์ท ค้าปลีก จำกัด,IV6910-0130,2026-10-10,2026-11-09,160500,0,สมศรี,
+C002,บริษัท โฮมเทค อีเลคทริค จำกัด,IV6907-0088,2026-07-20,2026-08-19,321000,100000,วิชัย,ชำระบางส่วน
+C002,บริษัท โฮมเทค อีเลคทริค จำกัด,IV6908-0094,2026-08-25,2026-09-24,96300,0,วิชัย,
+C003,ห้างหุ้นส่วนจำกัด สมบูรณ์การช่าง,IV6904-0045,2026-04-05,2026-05-05,53500,0,วิชัย,ติดตามแล้ว 3 ครั้ง
+C003,ห้างหุ้นส่วนจำกัด สมบูรณ์การช่าง,IV6901-0012,2026-01-10,2026-02-09,42800,0,วิชัย,
+C004,บริษัท สยามฟู้ดส์ อินดัสทรี จำกัด,IV6909-0115,2026-09-01,2026-10-31,535000,0,สมศรี,เครดิต 60 วัน
+C004,บริษัท สยามฟู้ดส์ อินดัสทรี จำกัด,IV6910-0142,2026-10-20,2026-12-19,428000,0,สมศรี,เครดิต 60 วัน
+C005,บริษัท บางกอก ดีไซน์ สตูดิโอ จำกัด,IV6806-0230,2025-06-15,2025-07-15,74900,0,ปรีชา,ลูกหนี้ปิดกิจการ อยู่ระหว่างดำเนินคดี
+C005,บริษัท บางกอก ดีไซน์ สตูดิโอ จำกัด,IV6908-0101,2026-08-30,2026-09-29,128400,128400,ปรีชา,ชำระครบแล้ว
+C006,บริษัท นครพัฒนา คอนสตรัคชั่น จำกัด,IV6910-0150,2026-10-25,2026-11-24,192600,0,ปรีชา,
+C006,บริษัท นครพัฒนา คอนสตรัคชั่น จำกัด,IV6906-0077,2026-06-12,2026-07-12,85600,40000,ปรีชา,ชำระบางส่วน
+C006,บริษัท นครพัฒนา คอนสตรัคชั่น จำกัด,CN6910-0005,2026-10-28,2026-10-28,-21400,0,ปรีชา,ใบลดหนี้ยังไม่ได้ตัดชำระ
+`,
+ap: `vendor_code,vendor_name,doc_no,doc_date,due_date,amount,paid,remark
+V001,บริษัท รุ่งเรืองวัสดุ จำกัด,INV2610-0012,2026-10-02,2026-11-01,128400,0,
+V001,บริษัท รุ่งเรืองวัสดุ จำกัด,INV2609-0277,2026-09-05,2026-10-05,96300,0,
+V001,บริษัท รุ่งเรืองวัสดุ จำกัด,INV2608-0190,2026-08-10,2026-09-09,149800,50000,ชำระบางส่วน
+V002,บริษัท เอ็นเนอร์จี พลัส จำกัด,TX-6910-0457,2026-10-05,2026-10-20,20000,0,
+V003,บริษัท คลีนโปร เซอร์วิส จำกัด,SV69-1021,2026-10-07,2026-11-06,26750,0,
+V004,บริษัท แพ็คเกจจิ้ง โปร จำกัด,INV-0458,2026-10-20,2026-12-19,34240,0,
+V004,บริษัท แพ็คเกจจิ้ง โปร จำกัด,INV-0397,2026-06-30,2026-08-29,58850,0,
+V005,บริษัท โลจิสติกส์ไทย จำกัด,INV2603-0207,2026-03-25,2026-04-24,42800,0,โต้แย้งยอด รอใบลดหนี้
+V006,บริษัท ดิจิทัลคลาวด์ จำกัด,E-TAX-26100045,2026-10-30,2026-11-29,16050,0,
+`,
+vat: `doc_date,tax_invoice_no,vendor_name,vendor_tax_id,branch,description,amount,vat
+2026-10-02,INV2610-0012,บริษัท รุ่งเรืองวัสดุ จำกัด,0999900001011,สำนักงานใหญ่,ซื้อวัตถุดิบ,120000,8400
+2026-10-05,TX-6910-0457,บริษัท เอ็นเนอร์จี พลัส จำกัด,0999900001020,00001,ค่าน้ำมันรถบรรทุก,18691.59,1308.41
+2026-10-07,SV69-1021,บริษัท คลีนโปร เซอร์วิส จำกัด,0999900001038,สำนักงานใหญ่,ค่าบริการทำความสะอาด,25000,1750
+2026-10-08,CAR-0091,บริษัท ออโต้ลีสซิ่ง จำกัด,0999900001097,สำนักงานใหญ่,ค่าเช่ารถยนต์นั่งผู้บริหาร,20000,1400
+2026-10-10,INV2610-0031,บริษัท รุ่งเรืองวัสดุ จำกัด,0999900001011,สำนักงานใหญ่,ซื้อวัตถุดิบ,85500,5985
+2026-10-12,A-000981,ห้างหุ้นส่วนจำกัด ไอทีโซลูชั่น,0999900001046,สำนักงานใหญ่,ซื้อคอมพิวเตอร์ (สินทรัพย์),45000,3150
+2026-10-15,R-2569-0088,บริษัท ภัตตาคารสยาม จำกัด,0999900001054,สำนักงานใหญ่,ค่ารับรองลูกค้า,8000,560
+2026-10-18,TX-6910-0512,บริษัท เอ็นเนอร์จี พลัส จำกัด,0999900001020,00001,ค่าน้ำมันรถบรรทุก,12000,840
+2026-10-20,INV-0458,บริษัท แพ็คเกจจิ้ง โปร จำกัด,0999900001063,สำนักงานใหญ่,ซื้อกล่องบรรจุภัณฑ์,32000,2240
+2026-10-22,SV69-1102,บริษัท คลีนโปร เซอร์วิส จำกัด,0999900001038,สำนักงานใหญ่,ค่าบริการทำความสะอาด,25000,1850
+2026-03-25,INV2603-0207,บริษัท โลจิสติกส์ไทย จำกัด,0999900001071,สำนักงานใหญ่,ค่าขนส่งสินค้า,40000,2800
+2026-10-28,INV2610-0031,บริษัท รุ่งเรืองวัสดุ จำกัด,0999900001011,สำนักงานใหญ่,ซื้อวัตถุดิบ,85500,5985
+2026-10-30,E-TAX-26100045,บริษัท ดิจิทัลคลาวด์ จำกัด,0999900001089,สำนักงานใหญ่,ค่าบริการคลาวด์,15000,1050
+`
+};
+const $ = id => document.getElementById(id);
+const fmt = (v, dp = 2) => v == null || isNaN(v) ? '-' : (v < 0 ? '(' + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits: dp, maximumFractionDigits: dp}) + ')' : v.toLocaleString('en-US', {minimumFractionDigits: dp, maximumFractionDigits: dp}));
+const num = v => { v = String(v ?? '').replace(/,/g, '').trim(); if (!v || v === '-') return 0; if (/^\(.*\)$/.test(v)) return -parseFloat(v.slice(1, -1)); return parseFloat(v) || 0; };
+const r2 = v => Math.round((v + Number.EPSILON) * 100) / 100;
+const pd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); };
+const thd = s => { const d = pd(s); return String(d.getUTCDate()).padStart(2, '0') + '/' + String(d.getUTCMonth() + 1).padStart(2, '0') + '/' + (d.getUTCFullYear() + 543); };
+const days = (a, b) => Math.round((pd(b) - pd(a)) / 86400000);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const TH_M = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+function parseCSV(text) {
+  const rows = []; let row = [], f = '', q = false;
+  text = text.replace(/^﻿/, '');
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ',') { row.push(f); f = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+    else f += c;
+  }
+  if (f || row.length) { row.push(f); rows.push(row); }
+  const h = rows.shift().map(x => x.trim());
+  return rows.filter(r => r.some(x => x.trim())).map(r => Object.fromEntries(h.map((k, i) => [k, (r[i] ?? '').trim()])));
+}
+
+const state = {};
+for (const k of ['fs', 'ar', 'ap', 'vat']) { state[k] = parseCSV(SAMPLE[k]); $(k + 'Csv').value = SAMPLE[k].trim(); }
+function loadCsv(k) {
+  try { const d = parseCSV($(k + 'Csv').value); if (!d.length) throw new Error('ไม่พบข้อมูล'); state[k] = d; if (k === 'fs') buildFsEdit(); renderAll(); alert('โหลดข้อมูลแล้ว ' + d.length + ' แถว'); }
+  catch (e) { alert('อ่าน CSV ไม่ได้: ' + e.message); }
+}
+
+/* ---------- financial statements ---------- */
+function fsYears() { return Object.keys(state.fs[0]).filter(k => /^y\d{4}$/.test(k)).map(k => +k.slice(1)).sort(); }
+function G(code, y) { const r = state.fs.find(x => x.code === code); return r ? num(r['y' + y]) : 0; }
+function buildFsEdit() {
+  const ys = fsYears();
+  let h = '<tr><th>รหัส</th><th>รายการ</th>' + ys.map(y => `<th class="n">${y + 543}</th>`).join('') + '</tr>';
+  state.fs.forEach((r, i) => { h += `<tr><td>${esc(r.code)}</td><td>${esc(r.item)}</td>` + ys.map(y => `<td class="n"><input type="number" step="0.01" value="${esc(r['y' + y])}" data-i="${i}" data-y="${y}"></td>`).join('') + '</tr>'; });
+  $('fsEdit').innerHTML = h;
+  $('fsEdit').querySelectorAll('input').forEach(inp => inp.addEventListener('input', e => { state.fs[e.target.dataset.i]['y' + e.target.dataset.y] = e.target.value; renderCF(); renderRatio(); }));
+}
+
+function renderCF() {
+  const ys = fsYears(), y0 = ys[ys.length - 2], y1 = ys[ys.length - 1];
+  const P = c => G(c, y1), O = c => G(c, y0);
+  const pbt = P('PL_REV') - P('PL_COGS') + P('PL_OTHINC') - P('PL_SGA') - P('PL_INT');
+  const np = pbt - P('PL_TAX');
+  const adj = [['ค่าเสื่อมราคา', P('SUP_DEP')], ['หนี้สงสัยจะสูญ', P('SUP_BADDEBT')], ['(กำไร) ขาดทุนจากการขายสินทรัพย์', -P('SUP_GAIN')], ['ต้นทุนทางการเงิน', P('PL_INT')]];
+  const wc = [['ลูกหนี้การค้า (เพิ่มขึ้น) ลดลง', -(P('BS_AR') - O('BS_AR'))], ['สินค้าคงเหลือ (เพิ่มขึ้น) ลดลง', -(P('BS_INV') - O('BS_INV'))], ['ค่าใช้จ่ายจ่ายล่วงหน้า (เพิ่มขึ้น) ลดลง', -(P('BS_PREPAID') - O('BS_PREPAID'))], ['เจ้าหนี้การค้า เพิ่มขึ้น (ลดลง)', P('BS_AP') - O('BS_AP')], ['ค่าใช้จ่ายค้างจ่าย เพิ่มขึ้น (ลดลง)', P('BS_ACCRUED') - O('BS_ACCRUED')]];
+  const sum = a => a.reduce((s, x) => s + x[1], 0);
+  const beforeWc = pbt + sum(adj), gen = beforeWc + sum(wc);
+  const taxPaid = O('BS_TAXPAY') + P('PL_TAX') - P('BS_TAXPAY');
+  const paid = [['จ่ายดอกเบี้ย', -P('SUP_INT_PAID')], ['จ่ายภาษีเงินได้', -taxPaid]];
+  const cfo = gen + sum(paid);
+  const inv = [['เงินสดจ่ายซื้อที่ดิน อาคารและอุปกรณ์', -P('SUP_PPE_BUY')], ['เงินสดรับจากการขายอุปกรณ์', P('SUP_PPE_PROCEEDS')]];
+  const fin = [['เงินกู้ยืมระยะสั้น เพิ่มขึ้น (ลดลง)', P('BS_STLOAN') - O('BS_STLOAN')], ['เงินกู้ยืมระยะยาว เพิ่มขึ้น (ลดลง)', P('BS_LTLOAN') - O('BS_LTLOAN')], ['เงินสดรับจากการเพิ่มทุน', P('BS_CAPITAL') - O('BS_CAPITAL')], ['จ่ายเงินปันผล', -P('SUP_DIV')]];
+  const cfi = sum(inv), cff = sum(fin), net = cfo + cfi + cff;
+  const row = (t, v, cls = '', ind = '') => `<tr class="${cls}"><td class="${ind}">${t}</td><td class="n">${v === null ? '' : fmt(v)}</td></tr>`;
+  let h = `<tr><th>${esc($('company').value)} — สำหรับปีสิ้นสุด 31 ธันวาคม ${y1 + 543} (บาท)</th><th class="n">ปี ${y1 + 543}</th></tr>`;
+  h += row('กระแสเงินสดจากกิจกรรมดำเนินงาน', null, 'grp') + row('กำไรก่อนภาษีเงินได้', pbt, '', 'i1') + row('รายการปรับกระทบ', null, '', 'i1');
+  adj.forEach(a => h += row(a[0], a[1], '', 'i2'));
+  h += row('กำไรจากการดำเนินงานก่อนการเปลี่ยนแปลงในสินทรัพย์และหนี้สินดำเนินงาน', beforeWc, 'total');
+  wc.forEach(a => h += row(a[0], a[1], '', 'i2'));
+  h += row('เงินสดรับจากการดำเนินงาน', gen, 'total');
+  paid.forEach(a => h += row(a[0], a[1], '', 'i2'));
+  h += row('เงินสดสุทธิได้มาจาก (ใช้ไปใน) กิจกรรมดำเนินงาน', cfo, 'total');
+  h += row('กระแสเงินสดจากกิจกรรมลงทุน', null, 'grp'); inv.forEach(a => h += row(a[0], a[1], '', 'i2'));
+  h += row('เงินสดสุทธิได้มาจาก (ใช้ไปใน) กิจกรรมลงทุน', cfi, 'total');
+  h += row('กระแสเงินสดจากกิจกรรมจัดหาเงิน', null, 'grp'); fin.forEach(a => h += row(a[0], a[1], '', 'i2'));
+  h += row('เงินสดสุทธิได้มาจาก (ใช้ไปใน) กิจกรรมจัดหาเงิน', cff, 'total');
+  h += row('เงินสดและรายการเทียบเท่าเงินสดเพิ่มขึ้น (ลดลง) สุทธิ', net, 'total') + row('เงินสดฯ ณ วันต้นปี', O('BS_CASH')) + row('เงินสดฯ ณ วันสิ้นปี', O('BS_CASH') + net, 'total');
+  $('cfTable').innerHTML = h;
+  $('cfKpi').innerHTML = [['กิจกรรมดำเนินงาน', cfo], ['กิจกรรมลงทุน', cfi], ['กิจกรรมจัดหาเงิน', cff], ['เงินสดเพิ่มขึ้นสุทธิ', net], ['Free Cash Flow (CFO − CAPEX)', cfo - P('SUP_PPE_BUY')]].map(k => `<div class="kpi"><span>${k[0]}</span><b>${fmt(k[1], 0)}</b></div>`).join('');
+  const dc = O('BS_PPE') + P('SUP_PPE_BUY') - P('BS_PPE'), da = O('BS_ACCDEP') + P('SUP_DEP') - P('BS_ACCDEP');
+  const checks = [
+    ['เงินสดเพิ่มขึ้นสุทธิ = ผลต่างเงินสดในงบแสดงฐานะการเงิน', net, P('BS_CASH') - O('BS_CASH')],
+    ['กำไรสะสมต้นปี + กำไรสุทธิ − ปันผล = กำไรสะสมปลายปี', O('BS_RE') + np - P('SUP_DIV'), P('BS_RE')],
+    ['ค่าเผื่อหนี้สงสัยจะสูญเพิ่มขึ้น = หนี้สงสัยจะสูญ (กรณีไม่มีตัดหนี้สูญ)', P('BS_ALLOW') - O('BS_ALLOW'), P('SUP_BADDEBT')],
+    ['มูลค่าตามบัญชีสินทรัพย์ที่ขาย = เงินรับ − กำไรจากการขาย', dc - da, P('SUP_PPE_PROCEEDS') - P('SUP_GAIN')]];
+  $('cfChecks').innerHTML = checks.map(c => { const d = r2(c[1] - c[2]), ok = Math.abs(d) < 0.5; return `<li><span class="tag ${ok ? '' : 'bad'}">${ok ? 'ผ่าน' : 'ผลต่าง ' + fmt(d)}</span> ${c[0]} <span class="note">(${fmt(c[1])} เทียบ ${fmt(c[2])})</span></li>`; }).join('');
+}
+
+/* ---------- aging ---------- */
+const BK = ['ยังไม่ถึงกำหนด', '1-30 วัน', '31-60 วัน', '61-90 วัน', '91-180 วัน', '181-365 วัน', 'เกิน 365 วัน'];
+const BKC = ['#4BA882', '#A8D5BA', '#E8C96A', '#E0A458', '#D9773E', '#C0504D', '#7B2D26'];
+const RATES = [0, 1, 5, 10, 25, 50, 100];
+const bucketOf = d => d <= 0 ? 0 : d <= 30 ? 1 : d <= 60 ? 2 : d <= 90 ? 3 : d <= 180 ? 4 : d <= 365 ? 5 : 6;
+
+function renderAging(kind) {
+  const isAr = kind === 'ar', asOf = $(kind + 'AsOf').value, gl = $(kind + 'Gl').value;
+  const pc = isAr ? 'customer_code' : 'vendor_code', pn = isAr ? 'customer_name' : 'vendor_name';
+  const label = isAr ? 'ลูกหนี้' : 'เจ้าหนี้';
+  const det = [], issues = [];
+  for (const r of state[kind]) {
+    const bal = r2(num(r.amount) - num(r.paid));
+    if (Math.abs(bal) < .005) continue;
+    if (pd(r.doc_date) > pd(asOf)) { issues.push(`${r.doc_no}: วันที่เอกสารหลังวันที่รายงาน — ไม่นำมารวม`); continue; }
+    const od = days(r.due_date, asOf);
+    if (bal < 0) issues.push(`${r.doc_no}: ยอดติดลบ ${fmt(bal)} (ใบลดหนี้/ชำระเกิน) ควรตัดชำระกับเอกสารที่เกี่ยวข้อง`);
+    det.push({code: r[pc], name: r[pn], doc: r.doc_no, dd: r.doc_date, due: r.due_date, od: Math.max(od, 0), b: bucketOf(od), bal, rm: r.remark || '', raw: od});
+  }
+  det.sort((a, b) => a.code.localeCompare(b.code) || pd(a.due) - pd(b.due));
+  const sum = {}, grand = Array(7).fill(0);
+  det.forEach(x => { (sum[x.code] ??= {name: x.name, b: Array(7).fill(0)}).b[x.b] += x.bal; grand[x.b] += x.bal; });
+  const total = grand.reduce((a, b) => a + b, 0) || 0;
+  let h = `<tr><th>รหัส</th><th>ชื่อ${label}</th>${BK.map(b => `<th class="n">${b}</th>`).join('')}<th class="n">รวม</th><th class="n">%</th></tr>`;
+  for (const [c, v] of Object.entries(sum)) { const t = v.b.reduce((a, b) => a + b, 0); h += `<tr class="${v.b.slice(4).some(x => x > 0) ? 'bad' : ''}"><td>${esc(c)}</td><td>${esc(v.name)}</td>${v.b.map(x => `<td class="n">${fmt(x)}</td>`).join('')}<td class="n"><b>${fmt(t)}</b></td><td class="n">${fmt(total ? t / total * 100 : 0, 1)}</td></tr>`; }
+  h += `<tr class="total"><td></td><td>รวมทั้งสิ้น</td>${grand.map(x => `<td class="n">${fmt(x)}</td>`).join('')}<td class="n">${fmt(total)}</td><td class="n">100.0</td></tr>`;
+  h += `<tr><td></td><td>สัดส่วน (%)</td>${grand.map(x => `<td class="n">${fmt(total ? x / total * 100 : 0, 1)}</td>`).join('')}<td></td><td></td></tr>`;
+  let allowTotal = 0;
+  if (isAr) {
+    const al = grand.map((x, i) => x * RATES[i] / 100); allowTotal = al.reduce((a, b) => a + b, 0);
+    h += `<tr class="grp"><td></td><td>อัตราค่าเผื่อฯ ตามนโยบาย (%) *</td>${RATES.map(x => `<td class="n">${x}</td>`).join('')}<td></td><td></td></tr>`;
+    h += `<tr class="total"><td></td><td>ค่าเผื่อหนี้สงสัยจะสูญที่ควรมี</td>${al.map(x => `<td class="n">${fmt(x)}</td>`).join('')}<td class="n">${fmt(allowTotal)}</td><td></td></tr>`;
+  }
+  $(kind + 'Sum').innerHTML = h;
+  $(kind + 'Det').innerHTML = `<tr><th>รหัส</th><th>ชื่อ</th><th>เลขที่เอกสาร</th><th>วันที่</th><th>ครบกำหนด</th><th class="n">เกินกำหนด (วัน)</th><th>ช่วงอายุ</th><th class="n">ยอดคงค้าง</th><th>หมายเหตุ</th></tr>` +
+    det.map(x => `<tr class="${x.b >= 4 ? 'bad' : ''}"><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.doc)}</td><td>${thd(x.dd)}</td><td>${thd(x.due)}</td><td class="n">${x.od}</td><td>${BK[x.b]}</td><td class="n">${fmt(x.bal)}</td><td>${esc(x.rm)}</td></tr>`).join('');
+  $(kind + 'Bar').innerHTML = grand.map((x, i) => x > 0 ? `<div title="${BK[i]} ${fmt(x)}" style="width:${x / total * 100}%;background:${BKC[i]}"></div>` : '').join('');
+  $(kind + 'Leg').innerHTML = BK.map((b, i) => `<span><i style="background:${BKC[i]}"></i>${b} ${fmt(total ? grand[i] / total * 100 : 0, 1)}%</span>`).join('');
+  const over = total - grand[0], over90 = grand.slice(4).reduce((a, b) => a + b, 0);
+  const k = [[`ยอด${label}คงค้างรวม`, total], ['เกินกำหนดชำระ', over], ['เกิน 90 วัน', over90]];
+  if (isAr) k.push(['ค่าเผื่อฯ ที่ควรมี', allowTotal]);
+  else {
+    const within = n => det.filter(x => x.raw <= 0 && -x.raw <= n).reduce((a, x) => a + x.bal, 0);
+    k.push(['ครบกำหนดภายใน 7 วัน', within(7)], ['ครบกำหนดภายใน 30 วัน', within(30)]);
+  }
+  $(kind + 'Kpi').innerHTML = k.map(x => `<div class="kpi"><span>${x[0]}</span><b>${fmt(x[1], 0)}</b></div>`).join('');
+  let iss = '';
+  if (gl !== '') { const d = r2(total - num(gl)); iss += `<p><span class="tag ${Math.abs(d) < .5 ? '' : 'bad'}">${Math.abs(d) < .5 ? 'ตรงกับ GL' : 'ผลต่างกับ GL ' + fmt(d)}</span> ยอดตามรายงาน ${fmt(total)} · ยอดตาม GL ${fmt(num(gl))}${Math.abs(d) < .5 ? '' : ' — ต้องหาสาเหตุ เช่น เอกสารยังไม่ผ่านรายการ, ใบลดหนี้, รับ/จ่ายชำระที่ยังไม่ตัดรายการ'}</p>`; }
+  iss += issues.map(t => `<p class="flags">• ${esc(t)}</p>`).join('');
+  if (isAr) iss += '<p class="note">* อัตราค่าเผื่อฯ เป็นตัวอย่างนโยบาย ต้องปรับตามนโยบายบัญชีของกิจการ · การตัดหนี้สูญทางภาษีต้องเข้าเงื่อนไขกฎกระทรวง ฉบับที่ 186 (พ.ศ. 2534)</p>';
+  $(kind + 'Issues').innerHTML = '<b>การกระทบยอดและข้อสังเกต</b>' + (iss || '<p class="note">ไม่พบข้อสังเกต</p>');
+}
+
+/* ---------- purchase VAT ---------- */
+function validTid(t) { if (!/^\d{13}$/.test(t)) return false; let s = 0; for (let i = 0; i < 12; i++) s += +t[i] * (13 - i); return (11 - s % 11) % 10 === +t[12]; }
+const FORBID = [['รับรอง', 'ค่ารับรอง — ภาษีซื้อต้องห้าม (ม.82/5)'], ['รถยนต์นั่ง', 'รถยนต์นั่ง/รถโดยสารไม่เกิน 10 คน — ภาษีซื้อต้องห้าม (ม.82/5)'], ['รถเก๋ง', 'รถยนต์นั่ง/รถโดยสารไม่เกิน 10 คน — ภาษีซื้อต้องห้าม (ม.82/5)'], ['อย่างย่อ', 'ใบกำกับภาษีอย่างย่อ — ภาษีซื้อต้องห้าม (ม.82/5)']];
+function renderVat() {
+  const [ty, tm] = $('vatMonth').value.split('-').map(Number), rate = num($('vatRate').value), own = $('vatTid').value.trim();
+  const seen = {}, data = state.vat.map((r, i) => {
+    const amt = num(r.amount), vat = num(r.vat), tid = (r.vendor_tax_id || '').replace(/[-\s]/g, ''), fl = [], soft = []; let ok = true;
+    if (!validTid(tid)) { fl.push('เลขผู้เสียภาษีผู้ขายไม่ถูกต้อง'); ok = false; }
+    if (own && tid === own) { fl.push('เลขผู้เสียภาษีผู้ขายตรงกับของบริษัท'); ok = false; }
+    const ex = r2(amt * rate / 100); if (Math.abs(ex - vat) > 1) { fl.push(`VAT ไม่เท่ากับ ${rate}% (ควรเป็น ${fmt(ex)})`); ok = false; }
+    const key = tid + '|' + r.tax_invoice_no.toUpperCase(); if (seen[key]) { fl.push('ใบกำกับซ้ำกับลำดับที่ ' + seen[key]); ok = false; } else seen[key] = i + 1;
+    const d = pd(r.doc_date), gap = (ty - d.getUTCFullYear()) * 12 + (tm - 1 - d.getUTCMonth());
+    if (gap < 0) { fl.push('ใบกำกับลงวันที่หลังเดือนภาษี'); ok = false; }
+    else if (gap > 6) { fl.push('เกิน 6 เดือนนับจากเดือนที่ออกใบกำกับ — ใช้เครดิตในเดือนนี้ไม่ได้'); ok = false; }
+    else if (gap > 0) soft.push(`ใบกำกับเดือน${TH_M[d.getUTCMonth()]} ใช้สิทธิ์ล่าช้า ${gap} เดือน (ยังอยู่ในกำหนด)`);
+    const fb = FORBID.find(f => (r.description || '').includes(f[0])); if (fb) { fl.push(fb[1]); ok = false; }
+    const b = (r.branch || '').trim(), branch = ['', 'สำนักงานใหญ่', 'สนญ', '00000', '0'].includes(b) ? 'สำนักงานใหญ่' : 'สาขาที่ ' + b.padStart(5, '0');
+    return {no: i + 1, date: r.doc_date, inv: r.tax_invoice_no, vendor: r.vendor_name, tid, branch, desc: r.description, amt, vat, fl, soft, ok};
+  });
+  const ok = data.filter(x => x.ok).sort((a, b) => pd(a.date) - pd(b.date) || a.inv.localeCompare(b.inv));
+  const ta = ok.reduce((s, x) => s + x.amt, 0), tv = ok.reduce((s, x) => s + x.vat, 0);
+  const bad = data.filter(x => !x.ok);
+  $('vatTitle').innerHTML = `รายงานภาษีซื้อ เดือนภาษี ${TH_M[tm - 1]} ปี ${ty + 543}<br><span class="note">ชื่อผู้ประกอบการ: ${esc($('company').value)} · เลขประจำตัวผู้เสียภาษีอากร: ${esc(own)} · สำนักงานใหญ่</span>`;
+  $('vatTable').innerHTML = `<tr><th>ลำดับ</th><th>วัน เดือน ปี</th><th>เลขที่ใบกำกับภาษี</th><th>ชื่อผู้ขายสินค้า/ผู้ให้บริการ</th><th>เลขประจำตัวผู้เสียภาษีอากรของผู้ขาย</th><th>สถานประกอบการ</th><th class="n">มูลค่าสินค้าหรือบริการ</th><th class="n">จำนวนเงินภาษีมูลค่าเพิ่ม</th></tr>` +
+    ok.map((x, i) => `<tr><td>${i + 1}</td><td>${thd(x.date)}</td><td>${esc(x.inv)}</td><td>${esc(x.vendor)}${x.soft.length ? `<div class="flags soft">${esc(x.soft.join('; '))}</div>` : ''}</td><td>${x.tid}</td><td>${x.branch}</td><td class="n">${fmt(x.amt)}</td><td class="n">${fmt(x.vat)}</td></tr>`).join('') +
+    `<tr class="total"><td colspan="6">รวม</td><td class="n">${fmt(ta)}</td><td class="n">${fmt(tv)}</td></tr>`;
+  $('vatChk').innerHTML = `<tr><th>ลำดับ</th><th>วันที่</th><th>เลขที่ใบกำกับ</th><th>ผู้ขาย</th><th class="n">มูลค่า</th><th class="n">VAT</th><th>สถานะ</th><th>ข้อสังเกต</th></tr>` +
+    (bad.length ? bad.map(x => `<tr class="bad"><td>${x.no}</td><td>${thd(x.date)}</td><td>${esc(x.inv)}</td><td>${esc(x.vendor)}</td><td class="n">${fmt(x.amt)}</td><td class="n">${fmt(x.vat)}</td><td><span class="tag bad">ตัดออก</span></td><td class="flags">${esc(x.fl.join('; '))}</td></tr>`).join('') : '<tr><td colspan="8">ไม่มีรายการที่ถูกตัดออก</td></tr>');
+  $('vatKpi').innerHTML = [['จำนวนใบกำกับทั้งหมด', data.length, 0], ['นำไปเครดิตได้', ok.length, 0], ['ตัดออก / ต้องตรวจ', bad.length, 0], ['ยอดซื้อที่มีสิทธิ์ (ภ.พ.30)', ta, 2], ['ภาษีซื้อเดือนนี้ (ภ.พ.30)', tv, 2]].map(k => `<div class="kpi"><span>${k[0]}</span><b>${fmt(k[1], k[2])}</b></div>`).join('');
+}
+
+/* ---------- ratios ---------- */
+function ratiosFor(y, prev, avg) {
+  const Gy = c => G(c, y), B = c => (avg && prev) ? (G(c, y) + G(c, prev)) / 2 : G(c, y);
+  const rev = Gy('PL_REV'), cogs = Gy('PL_COGS'), pbt = rev - cogs + Gy('PL_OTHINC') - Gy('PL_SGA') - Gy('PL_INT'), ebit = pbt + Gy('PL_INT'), np = pbt - Gy('PL_TAX');
+  const ca = Gy('BS_CASH') + Gy('BS_AR') - Gy('BS_ALLOW') + Gy('BS_INV') + Gy('BS_PREPAID'), cl = Gy('BS_AP') + Gy('BS_ACCRUED') + Gy('BS_TAXPAY') + Gy('BS_STLOAN');
+  const taEnd = ca + Gy('BS_PPE') - Gy('BS_ACCDEP'), tl = cl + Gy('BS_LTLOAN'), eq = Gy('BS_CAPITAL') + Gy('BS_RE');
+  const ta = B('BS_CASH') + B('BS_AR') - B('BS_ALLOW') + B('BS_INV') + B('BS_PREPAID') + B('BS_PPE') - B('BS_ACCDEP'), eqB = B('BS_CAPITAL') + B('BS_RE');
+  const dv = (a, b) => b ? a / b : null;
+  const art = dv(rev, B('BS_AR') - B('BS_ALLOW')), it = dv(cogs, B('BS_INV')), apt = dv(cogs, B('BS_AP'));
+  const dso = dv(365, art), dio = dv(365, it), dpo = dv(365, apt);
+  return {bal: taEnd - tl - eq, g: [
+    ['สภาพคล่อง', [['อัตราส่วนทุนหมุนเวียน (Current Ratio)', dv(ca, cl), 'เท่า', 'สินทรัพย์หมุนเวียน ÷ หนี้สินหมุนเวียน', v => v < 1 ? 'ต่ำกว่า 1 เท่า เสี่ยงสภาพคล่อง' : v >= 1.5 ? 'สภาพคล่องดี' : 'พอใช้', 1],
+      ['อัตราส่วนทุนหมุนเวียนเร็ว (Quick Ratio)', dv(ca - Gy('BS_INV') - Gy('BS_PREPAID'), cl), 'เท่า', '(เงินสด + ลูกหนี้สุทธิ) ÷ หนี้สินหมุนเวียน', v => v < 1 ? 'ต่ำกว่า 1 เท่า พึ่งพาการขายสินค้า' : 'ชำระหนี้ระยะสั้นได้โดยไม่ต้องขายสินค้า', 1],
+      ['อัตราส่วนเงินสด (Cash Ratio)', dv(Gy('BS_CASH'), cl), 'เท่า', 'เงินสด ÷ หนี้สินหมุนเวียน', null, 1]]],
+    ['ประสิทธิภาพการบริหารสินทรัพย์', [['อัตราการหมุนเวียนลูกหนี้', art, 'รอบ', 'รายได้จากการขาย ÷ ลูกหนี้สุทธิ', null, 1], ['ระยะเวลาเก็บหนี้เฉลี่ย (DSO)', dso, 'วัน', '365 ÷ อัตราการหมุนเวียนลูกหนี้', v => v > 60 ? 'เทียบกับเครดิตเทอมที่ให้ลูกค้า' : '', -1],
+      ['อัตราการหมุนเวียนสินค้าคงเหลือ', it, 'รอบ', 'ต้นทุนขาย ÷ สินค้าคงเหลือ', null, 1], ['ระยะเวลาขายสินค้าเฉลี่ย (DIO)', dio, 'วัน', '365 ÷ อัตราการหมุนเวียนสินค้า', null, -1],
+      ['อัตราการหมุนเวียนเจ้าหนี้', apt, 'รอบ', 'ต้นทุนขาย ÷ เจ้าหนี้การค้า (ใช้แทนยอดซื้อ)', null, 0], ['ระยะเวลาชำระหนี้เฉลี่ย (DPO)', dpo, 'วัน', '365 ÷ อัตราการหมุนเวียนเจ้าหนี้', null, 0],
+      ['วงจรเงินสด (Cash Cycle)', dso != null && dio != null && dpo != null ? dso + dio - dpo : null, 'วัน', 'DSO + DIO − DPO', v => v > 60 ? 'เงินทุนจมในวงจรนาน ต้องมีเงินทุนหมุนเวียนรองรับ' : '', -1],
+      ['อัตราการหมุนเวียนของสินทรัพย์รวม', dv(rev, ta), 'รอบ', 'รายได้จากการขาย ÷ สินทรัพย์รวม', null, 1]]],
+    ['ความสามารถในการชำระหนี้', [['หนี้สินต่อส่วนของผู้ถือหุ้น (D/E)', dv(tl, eq), 'เท่า', 'หนี้สินรวม ÷ ส่วนของผู้ถือหุ้น', v => v > 2 ? 'สูง — ตรวจเงื่อนไข covenant ของสถาบันการเงิน' : 'อยู่ในระดับไม่สูง', -1],
+      ['หนี้สินต่อสินทรัพย์รวม', tl / taEnd * 100, '%', 'หนี้สินรวม ÷ สินทรัพย์รวม', null, -1], ['ความสามารถชำระดอกเบี้ย', dv(ebit, Gy('PL_INT')), 'เท่า', 'EBIT ÷ ดอกเบี้ยจ่าย', v => v < 1.5 ? 'ต่ำ — เสี่ยงชำระดอกเบี้ย' : 'ครอบคลุมดอกเบี้ยได้ดี', 1]]],
+    ['ความสามารถในการทำกำไร', [['อัตรากำไรขั้นต้น', (rev - cogs) / rev * 100, '%', 'กำไรขั้นต้น ÷ รายได้', null, 1], ['อัตรากำไรจากการดำเนินงาน (EBIT Margin)', ebit / rev * 100, '%', 'EBIT ÷ รายได้', null, 1],
+      ['อัตรากำไรสุทธิ', np / rev * 100, '%', 'กำไรสุทธิ ÷ รายได้', null, 1], ['ผลตอบแทนจากสินทรัพย์ (ROA)', np / ta * 100, '%', 'กำไรสุทธิ ÷ สินทรัพย์รวม', null, 1], ['ผลตอบแทนผู้ถือหุ้น (ROE)', np / eqB * 100, '%', 'กำไรสุทธิ ÷ ส่วนของผู้ถือหุ้น', null, 1]]]]};
+}
+function renderRatio() {
+  const ys = fsYears(), y0 = ys[ys.length - 2], y1 = ys[ys.length - 1], avg = $('ratioAvg').checked;
+  const A = ratiosFor(y1, y0, avg), Bv = ratiosFor(y0, null, false);
+  let h = `<tr><th>อัตราส่วน</th><th class="n">ปี ${y1 + 543}</th><th class="n">ปี ${y0 + 543}</th><th class="n">เปลี่ยนแปลง</th><th>หน่วย</th><th>สูตร</th><th>ข้อสังเกต</th></tr>`;
+  A.g.forEach((grp, gi) => {
+    h += `<tr class="grp"><td colspan="7">${grp[0]}</td></tr>`;
+    grp[1].forEach((it, ii) => {
+      const v1 = it[1], v0 = Bv.g[gi][1][ii][1], ch = v1 != null && v0 != null ? v1 - v0 : null;
+      const dir = it[5], arrow = ch == null || Math.abs(ch) < .005 || dir === 0 ? '' : ((ch > 0) === (dir > 0) ? ' <span class="tag">ดีขึ้น</span>' : ' <span class="tag bad">แย่ลง</span>');
+      h += `<tr><td class="i1">${it[0]}</td><td class="n"><b>${fmt(v1)}</b></td><td class="n">${fmt(v0)}</td><td class="n">${fmt(ch)}${arrow}</td><td>${it[2]}</td><td class="note">${it[3]}</td><td class="note">${it[4] && v1 != null ? it[4](v1) : ''}</td></tr>`;
+    });
+  });
+  h += `<tr><td colspan="7" class="note">ตรวจงบดุล: สินทรัพย์ − (หนี้สิน + ส่วนของผู้ถือหุ้น) ปี ${y1 + 543} = ${fmt(A.bal)} · ปี ${y0 + 543} = ${fmt(Bv.bal)} ${Math.abs(A.bal) < .5 && Math.abs(Bv.bal) < .5 ? '<span class="tag">สมดุล</span>' : '<span class="tag bad">ไม่สมดุล</span>'}${avg ? ' · ปีล่าสุดใช้ยอดเฉลี่ยสำหรับอัตราหมุนเวียน/ROA/ROE ปีก่อนใช้ยอดสิ้นปี (ไม่มีข้อมูลต้นปี)' : ' · ใช้ยอดสิ้นปีทั้งสองปี'}</td></tr>`;
+  $('ratioTable').innerHTML = h;
+  const f = (g, i) => A.g[g][1][i][1];
+  $('ratioKpi').innerHTML = [['Current Ratio', f(0, 0), 'เท่า'], ['D/E', f(2, 0), 'เท่า'], ['อัตรากำไรสุทธิ', f(3, 2), '%'], ['ROE', f(3, 4), '%'], ['วงจรเงินสด', f(1, 6), 'วัน']].map(k => `<div class="kpi"><span>${k[0]}</span><b>${fmt(k[1])} ${k[2]}</b></div>`).join('');
+}
+
+/* ---------- export ---------- */
+function exportTable(id, name) {
+  const rows = [...$(id).querySelectorAll('tr')].map(tr => [...tr.children].map(td => '"' + td.innerText.replace(/\s+/g, ' ').trim().replace(/"/g, '""') + '"').join(','));
+  const blob = new Blob(['﻿' + rows.join('\r\n')], {type: 'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name + '.csv'; a.click(); URL.revokeObjectURL(a.href);
+}
+
+function renderAll() { renderCF(); renderAging('ar'); renderAging('ap'); renderVat(); renderRatio(); }
+document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('nav button, section').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); $(b.dataset.t).classList.add('active');
+}));
+['arAsOf', 'arGl'].forEach(i => $(i).addEventListener('input', () => renderAging('ar')));
+['apAsOf', 'apGl'].forEach(i => $(i).addEventListener('input', () => renderAging('ap')));
+['vatMonth', 'vatTid', 'vatRate'].forEach(i => $(i).addEventListener('input', renderVat));
+$('ratioAvg').addEventListener('change', renderRatio);
+$('company').addEventListener('input', () => { renderCF(); renderVat(); });
+buildFsEdit(); renderAll();
+</script>
+</body>
+</html>
